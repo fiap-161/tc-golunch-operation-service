@@ -1,0 +1,336 @@
+basePath: /
+definitions:
+  dto.AdminRequestDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.CreateOrderDTO:
+    properties:
+      customer_id:
+        type: string
+      products:
+        items:
+          $ref: '#/definitions/dto.OrderProductInfo'
+        type: array
+    type: object
+  dto.OrderDAO:
+    properties:
+      created_at:
+        type: string
+      customer_id:
+        type: string
+      id:
+        type: string
+      preparing_time:
+        type: integer
+      price:
+        type: number
+      status:
+        $ref: '#/definitions/enum.OrderStatus'
+      updated_at:
+        type: string
+    type: object
+  dto.OrderPanelDTO:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/dto.OrderPanelItemDTO'
+        type: array
+    type: object
+  dto.OrderPanelItemDTO:
+    properties:
+      created_at:
+        type: string
+      order_number:
+        type: string
+      preparing_time:
+        type: integer
+      status:
+        type: string
+    type: object
+  dto.OrderProductInfo:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  dto.OrderResponseListDTO:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/dto.OrderDAO'
+        type: array
+    type: object
+  dto.UpdateOrderDTO:
+    properties:
+      status:
+        type: string
+    required:
+    - status
+    type: object
+  enum.OrderStatus:
+    enum:
+    - awaiting_payment
+    - received
+    - in_preparation
+    - ready
+    - completed
+    type: string
+    x-enum-varnames:
+    - OrderStatusAwaitingPayment
+    - OrderStatusReceived
+    - OrderStatusInPreparation
+    - OrderStatusReady
+    - OrderStatusCompleted
+  errors.ErrorDTO:
+    properties:
+      message:
+        type: string
+      message_error:
+        type: string
+    type: object
+  handler.TokenDTO:
+    properties:
+      token:
+        type: string
+    type: object
+  main.PongResponse:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:8083
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API para gerenciamento da produção e painel administrativo da lanchonete
+    GoLunch
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: GoLunch Production Service API
+  version: "1.0"
+paths:
+  /admin/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates an admin user and returns a JWT token
+      parameters:
+      - description: Admin login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AdminRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.TokenDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+      summary: Admin Login
+      tags:
+      - Admin Domain
+  /admin/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new admin user
+      parameters:
+      - description: Admin registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AdminRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+      summary: Register Admin
+      tags:
+      - Admin
+  /order/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all orders, optionally filtered by ID
+      parameters:
+      - description: Optional order ID filter
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.OrderResponseListDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+      security:
+      - BearerAuth: []
+      summary: Get all orders
+      tags:
+      - Order Domain
+    post:
+      consumes:
+      - application/json
+      description: Create a new order
+      parameters:
+      - description: Order to create. Note that the customer_id is automatically set
+          from the authenticated user.
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOrderDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+      security:
+      - BearerAuth: []
+      summary: Create Order
+      tags:
+      - Order Domain
+  /order/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update an existing order status
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Order status update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateOrderDTO'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+      security:
+      - BearerAuth: []
+      summary: Update Order
+      tags:
+      - Order Domain
+  /order/panel:
+    get:
+      consumes:
+      - application/json
+      description: Get the order panel with all orders that are in the panel status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.OrderPanelDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.ErrorDTO'
+      security:
+      - BearerAuth: []
+      summary: Get Order Panel
+      tags:
+      - Order Domain
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: Health Check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.PongResponse'
+      summary: Answers with "pong"
+      tags:
+      - Ping
+swagger: "2.0"

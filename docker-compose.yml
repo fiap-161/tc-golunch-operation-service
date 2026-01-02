@@ -1,0 +1,20 @@
+services:
+  operation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - CORE_SERVICE_URL=${CORE_SERVICE_URL}
+      - PAYMENT_SERVICE_URL=${PAYMENT_SERVICE_URL}
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./:/app
+    networks:
+      - operation-network
+
+networks:
+  operation-network:
+    driver: bridge

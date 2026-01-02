@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: operation-service-config
+  labels:
+    app: operation-service
+data:
+  # Server Configuration
+  PORT: "8083"
+  GIN_MODE: "release"
+  
+  # Database Configuration (PostgreSQL)
+  DB_HOST: "postgres-production"
+  DB_PORT: "5432"
+  DB_NAME: "golunch_production"
+  DB_USER: "golunch_production_user"
+  DB_SSL_MODE: "disable"
+  DB_TIMEZONE: "America/Sao_Paulo"
+  
+  # Service URLs
+  ORDER_SERVICE_URL: "http://core-service:8081"
+  PAYMENT_SERVICE_URL: "http://payment-service:8082"
+  
+  # Logging
+  LOG_LEVEL: "info"

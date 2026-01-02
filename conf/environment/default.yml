@@ -1,0 +1,6 @@
+app:
+  providers:
+    mercadopago:
+      host: https://api.mercadopago.com
+      qrcode:
+        path: /instore/orders/qr/seller/collectors/{user_id}/pos/{external_pos_id}/qrs

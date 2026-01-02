@@ -1,0 +1,26 @@
+# Binaries and build directories
+/app
+*.out
+*.exe
+
+# Temporary files
+*.log
+*.tmp
+
+# Docker
+.env
+pg-data/
+*.pid
+postgres-data/
+
+# MacOS
+.DS_Store
+
+# Sensitive files
+.env
+
+# IDE files
+.idea/
+
+# Images
+/uploads

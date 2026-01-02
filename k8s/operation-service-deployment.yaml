@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operation-service
+  labels:
+    app: operation-service
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: operation-service
+  template:
+    metadata:
+      labels:
+        app: operation-service
+        version: v1
+    spec:
+      containers:
+        - name: operation-service
+          image: ${ECR_PRODUCTION_SERVICE_URL}:latest
+          ports:
+            - containerPort: 8083
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "300m"
+              memory: "128Mi"
+          envFrom:
+            - configMapRef:
+                name: operation-service-config
+            - secretRef:
+                name: operation-service-secrets
+          startupProbe:
+            httpGet:
+              path: /ping
+              port: 8083
+            periodSeconds: 3
+            failureThreshold: 10
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8083
+            periodSeconds: 5
+            failureThreshold: 3
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8083
+            periodSeconds: 10
+            failureThreshold: 3
+            initialDelaySeconds: 15

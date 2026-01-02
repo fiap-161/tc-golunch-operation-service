@@ -1,0 +1,6 @@
+# Volumes
+pg-data/
+
+# Others
+.git
+Makefile

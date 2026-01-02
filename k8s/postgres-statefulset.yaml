@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-production
+  labels:
+    app: postgres-production
+spec:
+  serviceName: postgres-production
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-production
+  template:
+    metadata:
+      labels:
+        app: postgres-production
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "golunch_production"
+            - name: POSTGRES_USER
+              value: "golunch_production_user"
+            - name: POSTGRES_PASSWORD
+              value: "golunch_production_password"
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pg_isready -U golunch_production_user -d golunch_production"
+            initialDelaySeconds: 15
+            periodSeconds: 5
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: gp2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-production
+  labels:
+    app: postgres-production
+spec:
+  selector:
+    app: postgres-production
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP

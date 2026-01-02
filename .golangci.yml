@@ -1,0 +1,62 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - misspell
+    - revive
+    - rowserrcheck
+    - sloglint
+    - sqlclosecheck
+    - staticcheck
+  settings:
+    lll:
+      line-length: 140
+      tab-width: 4
+    revive:
+      severity: error
+      rules:
+        - name: atomic
+        - name: context-as-argument
+        - name: comment-spacings
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: exported
+        - name: receiver-naming
+        - name: use-any
+        - name: waitgroup-by-value
+    staticcheck:
+      checks:
+        - all
+        - -ST1000
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+        path: _test\.go
+    paths:
+      - main.go
+      - .*\.pb\.go$
+      - /usr/local/go/
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+  exclusions:
+    generated: lax
+    paths:
+      - main.go
+      - .*\.pb\.go$
+      - /usr/local/go/
+      - third_party$
+      - builtin$
+      - examples$
