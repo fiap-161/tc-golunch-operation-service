@@ -5,6 +5,10 @@ metadata:
   labels:
     app: operation-service
 data:
+  # Serverless Authentication URLs
+  LAMBDA_AUTH_URL: "https://your-api-gateway-id.execute-api.region.amazonaws.com/auth"
+  SERVICE_AUTH_LAMBDA_URL: "https://your-api-gateway-id.execute-api.region.amazonaws.com/service-auth"
+  
   # Server Configuration
   PORT: "8083"
   GIN_MODE: "release"
