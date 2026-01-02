@@ -118,7 +118,7 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
-  title: GoLunch Production Service API
+  title: GoLunch Operation Service API
   version: "1.0"
 paths:
   /admin/login:

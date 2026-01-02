@@ -13,17 +13,17 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockOrderClient simula o Order Service para testes isolados
-type MockOrderClient struct {
+// MockCoreClient simula o Core Service para testes isolados
+type MockCoreClient struct {
 	mock.Mock
 }
 
-func (m *MockOrderClient) GetOrder(orderID string) (*OrderResponse, error) {
+func (m *MockCoreClient) GetOrder(orderID string) (*CoreResponse, error) {
 	args := m.Called(orderID)
-	return args.Get(0).(*OrderResponse), args.Error(1)
+	return args.Get(0).(*CoreResponse), args.Error(1)
 }
 
-func (m *MockOrderClient) UpdateOrderStatus(orderID, status string) error {
+func (m *MockCoreClient) UpdateOrderStatus(orderID, status string) error {
 	args := m.Called(orderID, status)
 	return args.Error(0)
 }
@@ -38,8 +38,8 @@ func (m *MockPaymentClient) GetPayment(paymentID string) (*PaymentResponse, erro
 	return args.Get(0).(*PaymentResponse), args.Error(1)
 }
 
-// OrderResponse representa resposta do Order Service
-type OrderResponse struct {
+// CoreResponse representa resposta do Core Service
+type CoreResponse struct {
 	ID          string      `json:"id"`
 	CustomerID  string      `json:"customer_id"`
 	TotalAmount float64     `json:"total_amount"`
@@ -73,10 +73,10 @@ func TestProductionOrderCreationWithOrderValidation(t *testing.T) {
 	router := gin.New()
 
 	// Mocks
-	mockOrderClient := new(MockOrderClient)
+	mockCoreClient := new(MockCoreClient)
 
-	// Mock response do Order Service
-	expectedOrder := &OrderResponse{
+	// Mock response do Core Service
+	expectedOrder := &CoreResponse{
 		ID:          "order_123",
 		CustomerID:  "customer_123",
 		TotalAmount: 99.90,
@@ -90,7 +90,7 @@ func TestProductionOrderCreationWithOrderValidation(t *testing.T) {
 	}
 
 	// Configurar expectativas
-	mockOrderClient.On("GetOrder", "order_123").Return(expectedOrder, nil)
+	mockCoreClient.On("GetOrder", "order_123").Return(expectedOrder, nil)
 
 	// Simular dados locais de produção
 	productionOrders := make(map[string]interface{})
@@ -107,8 +107,8 @@ func TestProductionOrderCreationWithOrderValidation(t *testing.T) {
 			return
 		}
 
-		// Validar pedido com Order Service (mockado)
-		orderResponse, err := mockOrderClient.GetOrder(request.OrderID)
+		// Validar pedido com Core Service (mockado)
+		orderResponse, err := mockCoreClient.GetOrder(request.OrderID)
 		if err != nil {
 			c.JSON(404, gin.H{"error": "Order not found"})
 			return
@@ -173,7 +173,7 @@ func TestProductionOrderCreationWithOrderValidation(t *testing.T) {
 	assert.Equal(t, float64(3), response["items_count"])
 
 	// Verificar mock
-	mockOrderClient.AssertExpectations(t)
+	mockCoreClient.AssertExpectations(t)
 }
 
 // calculateEstimatedTime calcula tempo estimado baseado nos itens
@@ -193,10 +193,10 @@ func TestProductionStatusUpdate(t *testing.T) {
 	router := gin.New()
 
 	// Mocks
-	mockOrderClient := new(MockOrderClient)
+	mockCoreClient := new(MockCoreClient)
 
 	// Configurar expectativa
-	mockOrderClient.On("UpdateOrderStatus", "order_123", "in_production").Return(nil)
+	mockCoreClient.On("UpdateOrderStatus", "order_123", "in_production").Return(nil)
 
 	// Simular dados locais
 	productionOrders := map[string]interface{}{
@@ -248,9 +248,9 @@ func TestProductionStatusUpdate(t *testing.T) {
 			orderStatus = request.Status
 		}
 
-		// Notificar Order Service (mockado)
+		// Notificar Core Service (mockado)
 		if orderStatus != request.Status {
-			err := mockOrderClient.UpdateOrderStatus(orderID, orderStatus)
+			err := mockCoreClient.UpdateOrderStatus(orderID, orderStatus)
 			if err != nil {
 				c.JSON(500, gin.H{"error": "Failed to update order status"})
 				return
@@ -291,7 +291,7 @@ func TestProductionStatusUpdate(t *testing.T) {
 	assert.Equal(t, "in_production", response["order_status"])
 
 	// Verificar mock
-	mockOrderClient.AssertExpectations(t)
+	mockCoreClient.AssertExpectations(t)
 }
 
 // TestProductionPanelWithoutExternalDependencies testa painel de produção sem dependências externas

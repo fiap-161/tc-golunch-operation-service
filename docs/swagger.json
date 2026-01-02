@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "API para gerenciamento da produção e painel administrativo da lanchonete GoLunch",
-        "title": "GoLunch Production Service API",
+        "title": "GoLunch Operation Service API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",

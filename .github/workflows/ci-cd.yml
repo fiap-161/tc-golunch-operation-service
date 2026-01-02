@@ -23,7 +23,7 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_DB: golunch_production_test
+          POSTGRES_DB: golunch_operation_test
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_pass
         ports:
@@ -50,9 +50,9 @@ jobs:
         path: |
           ~/.cache/go-build
           ~/go/pkg/mod
-        key: ${{ runner.os }}-go-production-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-operation-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-production-
+          ${{ runner.os }}-go-operation-
 
     - name: 📋 Verify Dependencies
       run: |
@@ -81,7 +81,7 @@ jobs:
         echo "🎭 Running integration tests with mocked Order & Payment services..."
         make test-integration
       env:
-        DATABASE_URL: postgres://test_user:test_pass@localhost:5434/golunch_production_test?sslmode=disable
+        DATABASE_URL: postgres://test_user:test_pass@localhost:5434/golunch_operation_test?sslmode=disable
 
     - name: 🎭 Test Mocked External Dependencies
       run: |
@@ -203,7 +203,7 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_DB: golunch_production_test
+          POSTGRES_DB: golunch_operation_test
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_pass
         ports:
@@ -217,7 +217,7 @@ jobs:
       run: |
         docker run -d --name operation-service-test \
           -p 8083:8083 \
-          -e DATABASE_URL=postgres://test_user:test_pass@host.docker.internal:5434/golunch_production_test?sslmode=disable \
+          -e DATABASE_URL=postgres://test_user:test_pass@host.docker.internal:5434/golunch_operation_test?sslmode=disable \
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
     - name: ⏱️ Wait for Service Startup
@@ -302,9 +302,9 @@ jobs:
       run: |
         kubectl delete secret operation-service-secrets --ignore-not-found
         kubectl create secret generic operation-service-secrets \
-          --from-literal=DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/golunch_production?sslmode=require" \
+          --from-literal=DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/golunch_operation?sslmode=require" \
           --from-literal=SECRET_KEY="$SECRET_KEY" \
-          --from-literal=ORDER_SERVICE_URL="http://golunch-core-service:8081" \
+          --from-literal=CORE_SERVICE_URL="http://golunch-core-service:8081" \
           --from-literal=PAYMENT_SERVICE_URL="http://golunch-payment-service:8082"
 
     - name: � Deploy to Production

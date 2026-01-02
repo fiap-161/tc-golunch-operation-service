@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: operation-service
-          image: ${ECR_PRODUCTION_SERVICE_URL}:latest
+          image: ${ECR_OPERATION_SERVICE_URL}:latest
           ports:
             - containerPort: 8083
               protocol: TCP

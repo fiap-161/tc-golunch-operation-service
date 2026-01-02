@@ -13,11 +13,6 @@ import (
 	"github.com/fiap-161/tc-golunch-operation-service/database"
 	_ "github.com/fiap-161/tc-golunch-operation-service/docs"
 
-	// admincontroller "github.com/fiap-161/tc-golunch-operation-service/internal/admin/controller"
-	// adminmodel "github.com/fiap-161/tc-golunch-operation-service/internal/admin/dto"
-	// admindatasource "github.com/fiap-161/tc-golunch-operation-service/internal/admin/external/datasource"
-	// admingateway "github.com/fiap-161/tc-golunch-operation-service/internal/admin/gateway"
-	// adminhandler "github.com/fiap-161/tc-golunch-operation-service/internal/admin/handler"
 	authcontroller "github.com/fiap-161/tc-golunch-operation-service/internal/auth/controller"
 	"github.com/fiap-161/tc-golunch-operation-service/internal/auth/external"
 	"github.com/fiap-161/tc-golunch-operation-service/internal/http/middleware"
@@ -51,7 +46,6 @@ func main() {
 	db := database.NewPostgresDatabase().GetDb()
 
 	if err := db.AutoMigrate(
-		// &adminmodel.AdminDAO{}, // REMOVED: Admin now in Auth Service
 		&ordermodel.OrderDAO{},
 	); err != nil {
 		log.Fatalf("Erro ao migrar o banco: %v", err)
@@ -60,12 +54,6 @@ func main() {
 	// JWT service for generate and validate tokens
 	jwtGateway := external.NewJWTService(os.Getenv("SECRET_KEY"), 24*time.Hour)
 	authController := authcontroller.New(jwtGateway)
-
-	// Admin - REMOVED: now centralized in Auth Service (Order Service)
-	// adminDatasource := admindatasource.New(db)
-	// authGateway := admingateway.NewAuthGateway(authController)
-	// adminController := admincontroller.Build(adminDatasource, authGateway)
-	// adminHandler := adminhandler.New(adminController)
 
 	// Order Data Source and Gateway
 	orderDataSource := orderdatasource.New(db)
@@ -86,11 +74,6 @@ func main() {
 	// Default Routes
 	r.GET("/ping", ping)
 	r.GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
-
-	// Public Routes - REMOVED: auth now handled by Auth Service (Order Service port 8081)
-	// r.POST("/admin/register", adminHandler.Register)
-	// r.POST("/admin/login", adminHandler.Login)
-	// r.GET("/admin/validate", adminHandler.ValidateToken)
 
 	// Auth Service endpoints documentation
 	r.GET("/auth-info", func(c *gin.Context) {

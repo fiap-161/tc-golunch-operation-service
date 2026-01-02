@@ -524,7 +524,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8083",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "GoLunch Production Service API",
+	Title:            "GoLunch Operation Service API",
 	Description:      "API para gerenciamento da produção e painel administrativo da lanchonete GoLunch",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

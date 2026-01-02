@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type OrderServiceClient struct {
+type CoreServiceClient struct {
 	baseURL    string
 	httpClient *http.Client
 }
@@ -35,13 +35,13 @@ type OrderUpdateRequest struct {
 	Status string `json:"status"`
 }
 
-func NewOrderServiceClient() *OrderServiceClient {
-	baseURL := os.Getenv("ORDER_SERVICE_URL")
+func NewCoreServiceClient() *CoreServiceClient {
+	baseURL := os.Getenv("CORE_SERVICE_URL")
 	if baseURL == "" {
 		baseURL = "http://localhost:8081"
 	}
 
-	return &OrderServiceClient{
+	return &CoreServiceClient{
 		baseURL: baseURL,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
@@ -49,7 +49,7 @@ func NewOrderServiceClient() *OrderServiceClient {
 	}
 }
 
-func (c *OrderServiceClient) GetOrder(ctx context.Context, orderID string) (*OrderResponse, error) {
+func (c *CoreServiceClient) GetOrder(ctx context.Context, orderID string) (*OrderResponse, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/order/"+orderID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -62,7 +62,7 @@ func (c *OrderServiceClient) GetOrder(ctx context.Context, orderID string) (*Ord
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("order service returned status %d", resp.StatusCode)
+		return nil, fmt.Errorf("core service returned status %d", resp.StatusCode)
 	}
 
 	var orderResp OrderResponse
@@ -73,7 +73,7 @@ func (c *OrderServiceClient) GetOrder(ctx context.Context, orderID string) (*Ord
 	return &orderResp, nil
 }
 
-func (c *OrderServiceClient) GetAllOrders(ctx context.Context) ([]OrderResponse, error) {
+func (c *CoreServiceClient) GetAllOrders(ctx context.Context) ([]OrderResponse, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/order", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -86,7 +86,7 @@ func (c *OrderServiceClient) GetAllOrders(ctx context.Context) ([]OrderResponse,
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("order service returned status %d", resp.StatusCode)
+		return nil, fmt.Errorf("core service returned status %d", resp.StatusCode)
 	}
 
 	var orders []OrderResponse
@@ -97,7 +97,7 @@ func (c *OrderServiceClient) GetAllOrders(ctx context.Context) ([]OrderResponse,
 	return orders, nil
 }
 
-func (c *OrderServiceClient) UpdateOrderStatus(ctx context.Context, orderID, status string) error {
+func (c *CoreServiceClient) UpdateOrderStatus(ctx context.Context, orderID, status string) error {
 	payload := OrderUpdateRequest{Status: status}
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
@@ -117,7 +117,7 @@ func (c *OrderServiceClient) UpdateOrderStatus(ctx context.Context, orderID, sta
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("order service returned status %d", resp.StatusCode)
+		return fmt.Errorf("core service returned status %d", resp.StatusCode)
 	}
 
 	return nil

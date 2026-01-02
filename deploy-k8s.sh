@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Deploy Production Service to Kubernetes
+# Deploy Operation Service to Kubernetes
 # Usage: ./deploy-k8s.sh [namespace]
 
 NAMESPACE=${1:-golunch}
 
-echo "🏭 Deploying Production Service to namespace: ${NAMESPACE}"
+echo "🏭 Deploying Operation Service to namespace: ${NAMESPACE}"
 echo "💰 Cost: $0 (using PostgreSQL StatefulSet)"
 
 # Create namespace if it doesn't exist
@@ -33,18 +33,18 @@ echo "📈 Applying HPA..."
 kubectl apply -f k8s/operation-service-hpa.yaml -n ${NAMESPACE}
 
 # Wait for deployment to be ready
-echo "⏳ Waiting for Production Service to be ready..."
+echo "⏳ Waiting for Operation Service to be ready..."
 kubectl rollout status deployment/operation-service -n ${NAMESPACE} --timeout=300s
 
 # Show deployment status
 echo ""
-echo "✅ Production Service Deployment Status:"
+echo "✅ Operation Service Deployment Status:"
 kubectl get pods -l app=operation-service -n ${NAMESPACE}
 kubectl get pods -l app=postgres-production -n ${NAMESPACE}
 kubectl get svc -n ${NAMESPACE} | grep production
 
 echo ""
-echo "🎉 Production Service deployed successfully!"
+echo "🎉 Operation Service deployed successfully!"
 echo ""
 echo "📊 Next Steps:"
 echo "  • Test: kubectl port-forward svc/operation-service 8083:8083 -n ${NAMESPACE}"

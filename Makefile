@@ -1,6 +1,10 @@
-# Production Service Makefile
+# Operation Service Makefile
 
-.PHONY: build run test test-unit test-integration test-bdd clean coverage lint ci db-setup help
+.PHONY: build run test test-unit test-integration test-bdd clean coverage lint ci db-setup	@echo "🏥 Checking Operation Service health..."
+	@if curl -s http://localhost:8083/ping | grep -q "pong"; then \
+		echo "✅ Operation Service is healthy"; \
+	else \
+		echo "❌ Operation Service is not responding"; \
 
 # Variáveis
 BINARY_NAME=operation-service
@@ -8,12 +12,12 @@ GO_MODULE=github.com/fiap-161/tc-golunch-operation-service
 
 # Build
 build:
-	@echo "🔨 Building Production Service..."
+	@echo "🔨 Building Operation Service..."
 	go build -o bin/$(BINARY_NAME) cmd/api/main.go
 
 # Executar aplicação
 run:
-	@echo "🚀 Starting Production Service on port 8083..."
+	@echo "🚀 Starting Operation Service on port 8083..."
 	go run cmd/api/main.go
 
 # Testes
@@ -73,7 +77,7 @@ security-check:
 
 # Pipeline de CI/CD completa
 ci: mod-tidy lint test coverage security-check
-	@echo "✅ Production Service CI Pipeline completed successfully!"
+	@echo "✅ Operation Service CI Pipeline completed successfully!"
 	@echo "📊 Verifying 80% coverage requirement..."
 	@go tool cover -func=coverage-total.out | grep total | awk '{if ($$3+0 >= 80.0) print "✅ Coverage OK:", $$3; else print "❌ Coverage LOW:", $$3, "- Need 80%+"}'
 
@@ -95,34 +99,34 @@ docker-run:
 
 # Database setup (PostgreSQL)
 db-setup:
-	@echo "🗄️ Setting up Production Service database (PostgreSQL)..."
+	@echo "🗄️ Setting up Operation Service database (PostgreSQL)..."
 	docker run -d \
-		--name golunch_production_db \
-		-e POSTGRES_DB=golunch_production \
+		--name golunch_operation_db \
+		-e POSTGRES_DB=golunch_operation \
 		-e POSTGRES_USER=golunch_user \
 		-e POSTGRES_PASSWORD=golunch_password \
 		-p 5434:5432 \
 		postgres:13
 
 db-stop:
-	@echo "🛑 Stopping Production Service database..."
-	docker stop golunch_production_db || true
-	docker rm golunch_production_db || true
+	@echo "🛑 Stopping Operation Service database..."
+	docker stop golunch_operation_db || true
+	docker rm golunch_operation_db || true
 
 # Test com dependências mockadas
 test-mock-deps:
 	@echo "🎭 Running tests with mocked external dependencies..."
-	@echo "   - Order Service: Mocked"
+	@echo "   - Core Service: Mocked"
 	@echo "   - Payment Service: Mocked"
 	go test -v ./tests/... -tags=mock
 
 # Verificar saúde do serviço
 health-check:
-	@echo "🏥 Checking Production Service health..."
+	@echo "🏥 Checking Operation Service health..."
 	@if curl -s http://localhost:8083/ping > /dev/null; then \
-		echo "✅ Production Service is healthy"; \
+		echo "✅ Operation Service is healthy"; \
 	else \
-		echo "❌ Production Service is not responding"; \
+		echo "❌ Operation Service is not responding"; \
 	fi
 
 # Simular fluxo de produção
@@ -139,7 +143,7 @@ simulate-production:
 
 # Mostrar ajuda
 help:
-	@echo "🍳 Production Service - Available commands:"
+	@echo "🍳 Operation Service - Available commands:"
 	@echo ""
 	@echo "🚀 Development:"
 	@echo "  build              - Build the application"
@@ -172,7 +176,7 @@ help:
 	@echo "  simulate-production - Simulate production workflow"
 	@echo "  help               - Show this help"
 	@echo ""
-	@echo "📋 Note: This service manages kitchen production and communicates with Order service"
+	@echo "📋 Note: This service manages kitchen production and communicates with Core service"
 
 # Default target
 .DEFAULT_GOAL := help
