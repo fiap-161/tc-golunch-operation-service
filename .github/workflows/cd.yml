@@ -19,6 +19,9 @@ jobs:
           role-to-assume: arn:aws:iam::032811251961:role/git-terraform-role
           aws-region: us-east-1
 
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
       - name: Obter AWS Account ID
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
