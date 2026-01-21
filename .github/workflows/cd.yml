@@ -40,7 +40,7 @@ jobs:
         id: db_secret
         run: |
           DB_URL=$(aws secretsmanager get-secret-value \
-            --secret-id golunch_operation/db-url \
+            --secret-id golunch/db-url \
             --query SecretString \
             --output text)
           echo "db_url=$DB_URL" >> $GITHUB_OUTPUT
