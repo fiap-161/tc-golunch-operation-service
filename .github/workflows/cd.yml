@@ -70,10 +70,10 @@ jobs:
         run: |
           kubectl delete secret app-secrets --ignore-not-found
           kubectl create secret generic app-secrets \
-            --from-literal=DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/golunch_operation?sslmode=require" \
+            --from-literal=DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/golunchDB?sslmode=require" \
             --from-literal=POSTGRES_USER="$DB_USER" \
             --from-literal=POSTGRES_PASSWORD="$DB_PASSWORD" \
-            --from-literal=POSTGRES_DB="golunch_operation" \
+            --from-literal=POSTGRES_DB="golunchDB" \
             --from-literal=MERCADO_PAGO_ACCESS_TOKEN="$MP_ACCESS_TOKEN" \
             --from-literal=MERCADO_PAGO_SELLER_APP_USER_ID="$MP_SELLER_APP_USER_ID" \
             --from-literal=MERCADO_PAGO_EXTERNAL_POS_ID="DEFAULT" \
