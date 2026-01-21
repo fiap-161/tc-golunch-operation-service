@@ -23,6 +23,12 @@ jobs:
           role-to-assume: arn:aws:iam::032811251961:role/git-terraform-role
           aws-region: us-east-1
 
+      - name: Configure kubeconfig (EKS)
+        run: |
+          aws eks update-kubeconfig \
+            --region us-east-1 \
+            --name eks-golunch-terraform-infra
+
       - name: Verify AWS identity
         run: aws sts get-caller-identity
 
