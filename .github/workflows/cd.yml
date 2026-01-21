@@ -1,0 +1,114 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: ["master"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::032811251961:role/git-terraform-role
+          aws-region: us-east-1
+
+      - name: Obter AWS Account ID
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ACCOUNT_ID=$ACCOUNT_ID" >> $GITHUB_ENV
+
+      - name: Login no ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 \
+            | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+
+      - name: Buscar URL do banco de dados
+        id: db_secret
+        run: |
+          DB_URL=$(aws secretsmanager get-secret-value \
+            --secret-id golunch_operation/db-url \
+            --query SecretString \
+            --output text)
+          echo "db_url=$DB_URL" >> $GITHUB_OUTPUT
+
+      - name: Debug valor DB_URL
+        run: echo "DB_URL capturado ${{ steps.db_secret.outputs.db_url }}"
+
+      - name: Build da imagem
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          docker build -t golunch-operation-service:${IMAGE_TAG} .
+          docker tag golunch-operation-service:${IMAGE_TAG} $ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/golunch-operation-service:${IMAGE_TAG}
+          docker push $ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/golunch-operation-service:${IMAGE_TAG}
+
+      - name: Configurar kubectl para o EKS
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name eks-golunch-terraform-infra
+
+      - name: Criar Secret manualmente
+        env:
+          DB_USER: ${{ secrets.CORE_DATABASE_USER }}
+          DB_PASSWORD: ${{ secrets.CORE_DATABASE_PASSWORD }}
+          DB_HOST: ${{ steps.db_secret.outputs.db_url }}
+          MP_ACCESS_TOKEN: ${{ secrets.MERCADO_PAGO_ACCESS_TOKEN }}
+          MP_SELLER_APP_USER_ID: ${{ secrets.MERCADO_PAGO_SELLER_APP_USER_ID }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          kubectl delete secret app-secrets --ignore-not-found
+          kubectl create secret generic app-secrets \
+            --from-literal=DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/golunch_operation?sslmode=require" \
+            --from-literal=POSTGRES_USER="$DB_USER" \
+            --from-literal=POSTGRES_PASSWORD="$DB_PASSWORD" \
+            --from-literal=POSTGRES_DB="golunch_operation" \
+            --from-literal=MERCADO_PAGO_ACCESS_TOKEN="$MP_ACCESS_TOKEN" \
+            --from-literal=MERCADO_PAGO_SELLER_APP_USER_ID="$MP_SELLER_APP_USER_ID" \
+            --from-literal=MERCADO_PAGO_EXTERNAL_POS_ID="DEFAULT" \
+            --from-literal=SECRET_KEY="$SECRET_KEY"
+
+      - name: Instalar ou atualizar release com Helm
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          helm upgrade --install operation-service-0.0.1 ./goLunch_op \
+            --set image.repository=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/golunch-operation-service \
+            --set image.tag=${IMAGE_TAG} \
+            --set app.db_url="${{ steps.db_secret.outputs.db_url }}" \
+            --set app.db_user="${{ secrets.DB_USER }}" \
+            --set app.db_password="${{ secrets.DB_PASSWORD }}" \
+            --set app.mp_access_token="${{ secrets.MERCADO_PAGO_ACCESS_TOKEN }}" \
+            --set app.mp_seller_app_user_id="${{ secrets.MERCADO_PAGO_SELLER_APP_USER_ID }}" \
+            --set app.secret_key="${{ secrets.SECRET_KEY }}"
+
+      - name: Obter URL do serviço (LoadBalancer)
+        run: |
+          echo "⏳ Aguardando LoadBalancer atribuir EXTERNAL-IP..."
+          for i in {1..30}; do
+            SERVICE_URL=$(kubectl get svc golunch-api -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
+            if [ -n "$SERVICE_URL" ]; then
+              echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
+              echo "✅ Encontrado: $SERVICE_URL"
+              exit 0
+            fi
+            echo "Ainda aguardando... ($i/30)"
+            sleep 10
+          done
+          echo "❌ Não foi possível obter EXTERNAL-IP"
+          exit 1
+
+      - name: Deploy com Helm (configmap atualizado)
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          helm upgrade --install operation-service-0.0.1 ./goLunch_op \
+            --set image.repository=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/golunch-operation-service \
+            --set image.tag=${IMAGE_TAG} \
+            --set app.publicURL="http://${SERVICE_URL}:8080" \
+            --set app.webhookURL="http://${SERVICE_URL}:8080/webhook/payment/check"
+
+      - name: Atualizando pods
+        run: |
+          kubectl rollout restart deployment operation-service

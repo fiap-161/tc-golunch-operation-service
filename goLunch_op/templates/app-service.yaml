@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "goLunch.fullname" . }}
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ include "goLunch.fullname" . }}
+  ports:
+    - protocol: TCP
+      port: 8080
+      nodePort: 30080

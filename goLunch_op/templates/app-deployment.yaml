@@ -1,0 +1,55 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: {{ include "goLunch.fullname" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "goLunch.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "goLunch.fullname" . }}
+    spec:
+      containers:
+        - name: {{ include "goLunch.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          volumeMounts: 
+            - name: uploads
+              mountPath: /app/uploads
+          startupProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            periodSeconds: 3
+            failureThreshold: 3
+            initialDelaySeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            periodSeconds: 3
+            failureThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 1
+      volumes:
+        - name: uploads
+          emptyDir: {}

@@ -1,0 +1,68 @@
+replicaCount: 3   # mais de 1 réplica para alta disponibilidade
+
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  # A tag será sempre sobreposta pelo pipeline (ex: commit hash)
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "golunch-api"
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: LoadBalancer   # expõe externamente no EKS
+  port: 80
+
+ingress:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+livenessProbe:
+  httpGet:
+    path: /ping
+    port: 8080
+readinessProbe:
+  httpGet:
+    path: /ping
+    port: 8080
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Variáveis do ConfigMap (injetadas pelo pipeline)
+app:
+  publicURL:
+  webhookURL: 
+  db_url:
+  db_user:
+  db_password:
+  mp_access_token:
+  mp_seller_app_user_id:
+  secret_key:

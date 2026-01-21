@@ -1,0 +1,45 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  tests:
+    name: Testes e Cobertura
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Testes + cobertura
+        shell: bash
+        run: |
+          set -euo pipefail
+          # inclui todos os pacotes na métrica total
+          go test ./... -covermode=atomic -coverpkg=./... -coverprofile=coverage.out
+
+      - name: Enforce cobertura mínima
+        shell: bash
+        env:
+          MIN_COVERAGE: "5.0"
+        run: |
+          set -euo pipefail
+          if [ ! -f coverage.out ]; then
+            echo "coverage.out não encontrado. Verifique se os testes rodaram na raiz do módulo."
+            exit 1
+          fi
+          total=$(go tool cover -func=coverage.out | awk '/^total:/{print substr($3, 1, length($3)-1)}')
+          echo "Cobertura total: ${total}%"
+          awk -v total="$total" -v min="$MIN_COVERAGE" 'BEGIN {
+            if (total+0 < min+0) { printf("❌ Cobertura %.2f%% < mínimo %.2f%%\n", total, min); exit 1 }
+            else { printf("✅ Cobertura %.2f%% >= mínimo %.2f%%\n", total, min) }
+          }'

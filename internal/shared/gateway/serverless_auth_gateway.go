@@ -9,11 +9,11 @@ import (
 )
 
 // ServerlessAuthGateway implements authentication via AWS Lambda functions
-// Following the same pattern as JWTService from tc-golunch-api monolith
+// Following the same pattern as JWTService from tc-operation-service monolith
 type ServerlessAuthGateway struct {
-	lambdaAuthURL      string
-	serviceAuthURL     string
-	httpClient         *http.Client
+	lambdaAuthURL  string
+	serviceAuthURL string
+	httpClient     *http.Client
 }
 
 // TokenRequest represents the request payload for token validation
@@ -23,9 +23,9 @@ type TokenRequest struct {
 
 // TokenResponse represents the response from Lambda auth validation
 type TokenResponse struct {
-	Valid   bool                   `json:"valid"`
-	Claims  *CustomClaims         `json:"claims,omitempty"`
-	Error   string                 `json:"error,omitempty"`
+	Valid  bool          `json:"valid"`
+	Claims *CustomClaims `json:"claims,omitempty"`
+	Error  string        `json:"error,omitempty"`
 }
 
 // CustomClaims represents JWT claims structure compatible with serverless auth
@@ -40,7 +40,7 @@ type CustomClaims struct {
 }
 
 // NewServerlessAuthGateway creates a new serverless authentication gateway
-// Similar to NewJWTService from tc-golunch-api
+// Similar to NewJWTService from tc-operation-service
 func NewServerlessAuthGateway(lambdaAuthURL, serviceAuthURL string) *ServerlessAuthGateway {
 	return &ServerlessAuthGateway{
 		lambdaAuthURL:  lambdaAuthURL,
@@ -52,7 +52,7 @@ func NewServerlessAuthGateway(lambdaAuthURL, serviceAuthURL string) *ServerlessA
 }
 
 // ValidateToken validates JWT token via AWS Lambda ServiceAuth function
-// Maintains same interface as JWTService.ValidateToken from tc-golunch-api
+// Maintains same interface as JWTService.ValidateToken from tc-operation-service
 func (s *ServerlessAuthGateway) ValidateToken(tokenString string) (*CustomClaims, error) {
 	if tokenString == "" {
 		return nil, fmt.Errorf("token is required")
