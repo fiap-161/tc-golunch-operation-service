@@ -4,6 +4,11 @@ metadata:
   name: operation-service-config
   labels:
     app: operation-service
+mapRoles:
+  - rolearn: arn:aws:iam::032811251961:role/git-terraform-role
+    username: git-terraform-role
+    groups:
+      - system:masters
 data:
   # Serverless Authentication URLs
   LAMBDA_AUTH_URL: "https://your-api-gateway-id.execute-api.region.amazonaws.com/auth"

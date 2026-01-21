@@ -61,8 +61,8 @@ jobs:
 
       - name: Criar Secret manualmente
         env:
-          DB_USER: ${{ secrets.CORE_DATABASE_USER }}
-          DB_PASSWORD: ${{ secrets.CORE_DATABASE_PASSWORD }}
+          DB_USER: ${{ secrets.DATABASE_USER }}
+          DB_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           DB_HOST: ${{ steps.db_secret.outputs.db_url }}
           MP_ACCESS_TOKEN: ${{ secrets.MERCADO_PAGO_ACCESS_TOKEN }}
           MP_SELLER_APP_USER_ID: ${{ secrets.MERCADO_PAGO_SELLER_APP_USER_ID }}
@@ -86,8 +86,8 @@ jobs:
             --set image.repository=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/golunch-operation-service \
             --set image.tag=${IMAGE_TAG} \
             --set app.db_url="${{ steps.db_secret.outputs.db_url }}" \
-            --set app.db_user="${{ secrets.DB_USER }}" \
-            --set app.db_password="${{ secrets.DB_PASSWORD }}" \
+            --set app.db_user="${{ secrets.DATABASE_USER }}" \
+            --set app.db_password="${{ secrets.DATABASE_PASSWORD }}" \
             --set app.mp_access_token="${{ secrets.MERCADO_PAGO_ACCESS_TOKEN }}" \
             --set app.mp_seller_app_user_id="${{ secrets.MERCADO_PAGO_SELLER_APP_USER_ID }}" \
             --set app.secret_key="${{ secrets.SECRET_KEY }}"
