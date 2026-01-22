@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ include "goLunch.fullname" . }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ include "goLunch.fullname" . }}
@@ -16,13 +16,11 @@ spec:
         - name: {{ include "goLunch.fullname" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8083
+              protocol: TCP
           resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 200m
-              memory: 128Mi
+            {{- toYaml .Values.resources | nindent 12 }}
           envFrom:
             - configMapRef:
                 name: app-config
@@ -34,20 +32,20 @@ spec:
           startupProbe:
             httpGet:
               path: /ping
-              port: 8080
+              port: 8083
             periodSeconds: 3
             failureThreshold: 3
             initialDelaySeconds: 5
           readinessProbe:
             httpGet:
               path: /ping
-              port: 8080
+              port: 8083
             periodSeconds: 3
             failureThreshold: 1
           livenessProbe:
             httpGet:
               path: /ping
-              port: 8080
+              port: 8083
             periodSeconds: 5
             failureThreshold: 1
       volumes:
