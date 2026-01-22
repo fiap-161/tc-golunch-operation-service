@@ -8,7 +8,7 @@ image:
 
 imagePullSecrets: []
 nameOverride: ""
-fullnameOverride: "golunch-api"
+fullnameOverride: "operation-service"
 
 serviceAccount:
   create: true
