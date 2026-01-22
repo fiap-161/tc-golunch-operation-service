@@ -61,30 +61,16 @@ jobs:
         run: |
           aws eks update-kubeconfig --region us-east-1 --name eks-golunch-terraform-infra
 
-      - name: Criar Secret manualmente
-        env:
-          DB_USER: ${{ secrets.DATABASE_USER }}
-          DB_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          DB_HOST: ${{ steps.db_secret.outputs.db_url }}
-          MP_ACCESS_TOKEN: ${{ secrets.MERCADO_PAGO_ACCESS_TOKEN }}
-          MP_SELLER_APP_USER_ID: ${{ secrets.MERCADO_PAGO_SELLER_APP_USER_ID }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      - name: Criar namespace se não existir
         run: |
-          kubectl delete secret app-secrets --ignore-not-found
-          kubectl create secret generic app-secrets \
-            --from-literal=DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/golunchDB?sslmode=require" \
-            --from-literal=POSTGRES_USER="$DB_USER" \
-            --from-literal=POSTGRES_PASSWORD="$DB_PASSWORD" \
-            --from-literal=POSTGRES_DB="golunchDB" \
-            --from-literal=MERCADO_PAGO_ACCESS_TOKEN="$MP_ACCESS_TOKEN" \
-            --from-literal=MERCADO_PAGO_SELLER_APP_USER_ID="$MP_SELLER_APP_USER_ID" \
-            --from-literal=MERCADO_PAGO_EXTERNAL_POS_ID="DEFAULT" \
-            --from-literal=SECRET_KEY="$SECRET_KEY"
+          kubectl create namespace golunch --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Instalar ou atualizar release com Helm
         run: |
           IMAGE_TAG=${GITHUB_SHA}
           helm upgrade --install operation-service-0.0.1 ./goLunch_op \
+            --namespace golunch \
+            --create-namespace \
             --set image.repository=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/golunch-operation-service \
             --set image.tag=${IMAGE_TAG} \
             --set app.db_url="${{ steps.db_secret.outputs.db_url }}" \
@@ -98,7 +84,7 @@ jobs:
         run: |
           echo "⏳ Aguardando LoadBalancer atribuir EXTERNAL-IP..."
           for i in {1..30}; do
-            SERVICE_URL=$(kubectl get svc golunch-api -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
+            SERVICE_URL=$(kubectl get svc operation-service -n golunch -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
             if [ -n "$SERVICE_URL" ]; then
               echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
               echo "✅ Encontrado: $SERVICE_URL"
@@ -114,11 +100,12 @@ jobs:
         run: |
           IMAGE_TAG=${GITHUB_SHA}
           helm upgrade --install operation-service-0.0.1 ./goLunch_op \
+            --namespace golunch \
             --set image.repository=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/golunch-operation-service \
             --set image.tag=${IMAGE_TAG} \
-            --set app.publicURL="http://${SERVICE_URL}:8080" \
-            --set app.webhookURL="http://${SERVICE_URL}:8080/webhook/payment/check"
+            --set app.publicURL="http://${SERVICE_URL}" \
+            --set app.webhookURL="http://${SERVICE_URL}/webhook/payment/check"
 
       - name: Atualizando pods
         run: |
-          kubectl rollout restart deployment operation-service
+          kubectl rollout restart deployment operation-service -n golunch
