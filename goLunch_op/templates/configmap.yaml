@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: app-config-core-service
+  name: app-config
 data:
   UPLOAD_DIR: "/app/uploads"
   PUBLIC_URL: "{{ .Values.app.publicURL }}"

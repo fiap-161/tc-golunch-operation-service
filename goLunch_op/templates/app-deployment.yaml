@@ -23,9 +23,9 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           envFrom:
             - configMapRef:
-                name: app-config-core-service
+                name: app-config
             - secretRef:
-                name: app-secrets-core-service
+                name: app-secrets
           volumeMounts: 
             - name: uploads
               mountPath: /app/uploads
